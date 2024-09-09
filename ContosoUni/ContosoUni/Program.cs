@@ -4,61 +4,63 @@ using Microsoft.Extensions.Hosting;
 
 namespace ContosoUni
 {
-    public class Program
-    {
-        public static void Main(string[] args)
-        {
-            var builder = WebApplication.CreateBuilder(args);
+	public class Program
+	{
+		public static void Main(string[] args)
+		{
 
-            builder.Services.AddDbContext<SchoolContext>(options =>
-                options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection)")));
+			var builder = WebApplication.CreateBuilder(args);
 
-            builder.Services.AddDatabaseDeveloperPageExceptionFilter();
+			// Add services to the container.
+			builder.Services.AddControllersWithViews();
 
-            // Add services to the container.
-            builder.Services.AddControllersWithViews();
-            var app = builder.Build();
+			builder.Services.AddDbContext<SchoolContext>(options =>
+				options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
 
-            CreateDbIfNotExists(app);
+			builder.Services.AddDatabaseDeveloperPageExceptionFilter();
 
-            // Configure the HTTP request pipeline.
-            if (!app.Environment.IsDevelopment())
-            {
-                app.UseExceptionHandler("/Home/Error");
-                // The default HSTS value is 30 days. You may want to change this for production scenarios, see https://aka.ms/aspnetcore-hsts.
-                app.UseHsts();
-            }
+			var app = builder.Build();
+			CreateDbIfNotExists(app);
 
-            app.UseHttpsRedirection();
-            app.UseStaticFiles();
+			// Configure the HTTP request pipeline.
+			if (!app.Environment.IsDevelopment())
+			{
+				app.UseExceptionHandler("/Home/Error");
+				// The default HSTS value is 30 days. You may want to change this for production scenarios, see https://aka.ms/aspnetcore-hsts.
+				app.UseHsts();
+			}
 
-            app.UseRouting();
+			app.UseHttpsRedirection();
+			app.UseStaticFiles();
 
-            app.UseAuthorization();
+			app.UseRouting();
 
-            app.MapControllerRoute(
-                name: "default",
-                pattern: "{controller=Home}/{action=Index}/{id?}");
+			app.UseAuthorization();
 
-            app.Run();
+			app.MapControllerRoute(
+				name: "default",
+				pattern: "{controller=Home}/{action=Index}/{id?}");
 
-            static void CreateDbIfNotExists(IHost host)
-            {
-                using (var scope = host.Services.CreateScope())
-                {
-                    var services = scope.ServiceProvider;
-                    try
-                    {
-                        var context = services.GetRequiredService<SchoolContext>();
-                        DbInitializer.Initialize(context);
-                    }
-                    catch (Exception ex)
-                    {
-                        var logger = services.GetRequiredService<ILogger<Program>>();
-                        logger.LogError(ex, "An error occurred creating the DB.");
-                    }
-                }
-            }
-        }
-    }
+			app.Run();
+		}
+
+		public static void CreateDbIfNotExists(WebApplication app)
+		{
+			using (var scope = app.Services.CreateScope())
+			{
+
+				var services = scope.ServiceProvider;
+				try
+				{
+					var context = services.GetRequiredService<SchoolContext>();
+					DbInitializer.Initialize(context);
+				}
+				catch (Exception ex)
+				{
+					var logger = services.GetRequiredService<ILogger<Program>>();
+					logger.LogError(ex, "An error occured creating the DB.");
+				}
+			}
+		}
+	}
 }
